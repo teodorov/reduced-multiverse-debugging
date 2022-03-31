@@ -10,6 +10,10 @@ structure STR :=
   (actions: C → set A)
   (execute: C → A → set C)
 
+-- class Evaluate₀(EE VV : Type) := (state : EE → C → VV)
+-- def Evaluate := Evaluate₀ E V
+-- def Reduce := Evaluate₀ R α
+
 class Evaluate :=
   (state : E → C → V)
 
@@ -93,7 +97,7 @@ def ReducedMultiverseDebuggerAlone
 /-!
   # Replace the initial states of a STR, to make it start somewhere else
 -/
-def Initialized (o : STR C A) (initial : set C) : STR C A :=
+def ReplaceInitial (o : STR C A) (initial : set C) : STR C A :=
 { 
   initial := initial,
   actions := o.actions,
@@ -129,7 +133,7 @@ def FinderBridge
   (breakpoint : E)    -- the breakpoint
   : TR C := 
     STR2TR C A
-      (Initialized C A o initial) 
+      (ReplaceInitial C A o initial) 
       (Evaluate.state breakpoint)
 
 def search_accepting (C α : Type) (o : TR C) (reducer : C → α)  : list C := 
