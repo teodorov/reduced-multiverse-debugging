@@ -34,7 +34,6 @@ structure SLI' :=
   # Debug semantics
 -/
 
-
 mutual inductive TraceEntry , DebugAction
 with TraceEntry: Type
 | root (c: C) (a: DebugAction) 
@@ -46,24 +45,10 @@ with DebugAction : Type
 | jump : TraceEntry → DebugAction 
 | run_to_breakpoint : DebugAction
 
-
-structure DebugConfig :=
-  (current : option C)
-  (history : set C)
-  (options : set C)
-
-#check DebugConfig
-#check DebugAction
-
 structure DebugConfig₁ :=
   (current : option (TraceEntry C A))
   (history : set (TraceEntry C A))
   (options : option(DebugAction C A × set C))
-
-def root := (TraceEntry.root  3 (DebugAction.step 3))
-def child₁ := (TraceEntry.child 3 (DebugAction.step 2) root)
-def child₂ := (TraceEntry.child 3 (DebugAction.step 2) child₁)
-def child₃ := (TraceEntry.child 3 (DebugAction.step 2) root)
 
 def Finder 
   [has_evaluate: Evaluate C E bool]

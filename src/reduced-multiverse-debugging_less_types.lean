@@ -34,7 +34,10 @@ structure SLI' :=
   # Debug semantics
 -/
 
-
+structure DebugConfig :=
+  (current : option C)
+  (history : set C)
+  (options : set C)
 
 inductive DebugAction
 | step : A → DebugAction
