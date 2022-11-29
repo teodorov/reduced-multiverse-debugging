@@ -51,7 +51,7 @@ def rmdActions (C A : Type) (o : STR C A) : DebugConfig C → set (DebugAction C
     oa := { x : DebugAction C A | ∀ c, current = some c → ∀ a ∈ (o.actions c), x = step a    },
     sa := { x : DebugAction C A | ∀ c ∈ options,                               x = select c  },
     ja := { x : DebugAction C A | ∀ c ∈ history,                               x = jump c    }	
-	in oa ∪ ja ∪ { run_to_breakpoint }
+	in oa ∪ sa ∪ ja ∪ { run_to_breakpoint }
 
 def rmdExecute (C A E R α: Type)
   [has_evaluate: Evaluate C E bool]
