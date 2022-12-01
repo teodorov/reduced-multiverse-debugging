@@ -2,7 +2,7 @@ import sli.sli model_checking.mc_bridge debugging.rmd_bridge debugging.rmd_searc
 
 namespace rmd_predicate
 universe u
-variables (C A E R V α : Type)
+variables (S C A E R V α : Type)
 
 open sli
 open sli.toTR
@@ -50,6 +50,7 @@ def FinderFnPredicate
   * an abstraction of C
 -/
 def TopReducedMultiverseDebuggerPredicate
+  [h_C_deq: decidable_eq C]
   [has_evaluate: Evaluate C A E bool]
   [has_reduce:   Reduce C R α]
   (
@@ -63,15 +64,16 @@ def TopReducedMultiverseDebuggerPredicate
       (FinderFnPredicate C A E R α inject) breakpoint reduction
 
 
-def PredicateRMD 
+def PredicateRMD
+  [h_C_deq: decidable_eq C]
   [has_evaluate: Evaluate C A E bool]
   [has_reduce:   Reduce C R α]
   (
     inject : E →                                             -- le model (code, expression) du breakpoint
-              (C → bool)
+              (C → bool) 
               × (EmptinessChecker C α)
   )
- := ReducedMultiverseDebugger C A E R α (FinderFnPredicate C A E R α inject)
+ := ReducedMultiverseDebugger S C A E R α (FinderFnPredicate C A E R α inject)
 
 
 end rmd_predicate

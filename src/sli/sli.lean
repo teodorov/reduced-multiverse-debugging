@@ -1,5 +1,14 @@
 namespace sli
 universe u
+
+/-!
+  # Variables
+  - **C** configuration
+  - **A** action
+  - **E** diagnosis expression
+  - **R** reduction expression
+  - **α** the target type of the reduction
+-/
 variables (C A E R V α : Type)
 
 /-!

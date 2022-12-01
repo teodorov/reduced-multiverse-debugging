@@ -2,7 +2,7 @@ import sli.sli model_checking.mc_bridge debugging.rmd_bridge debugging.rmd_searc
 
 namespace rmd_state
 universe u
-variables (C A E R V α : Type)
+variables (S C A E R V α : Type)
 
 open sli
 open sli.toTR
@@ -61,6 +61,7 @@ in
   * an abstraction of C
 -/
 def TopReducedMultiverseDebuggerTemporalState {BE C₂ A₂: Type}
+  [h_C_deq: decidable_eq C]
   [has_evaluate: Evaluate C A E bool]
   [has_reduce:   Reduce (option C × C₂) R α]
   [h: ∀ (S : set (A × C)), decidable (S = ∅)]
@@ -76,15 +77,16 @@ def TopReducedMultiverseDebuggerTemporalState {BE C₂ A₂: Type}
       (FinderFnTemporalState C A E R α inject) breakpoint reduction
 
 def TemporalStateRMD {BE C₂ A₂: Type}
+  [h_C_deq: decidable_eq C]
+  [h: ∀ (S : set (A × C)), decidable (S = ∅)]
   [has_evaluate: Evaluate C A E bool]
   [has_reduce:   Reduce (option C × C₂) R α]
-  [h: ∀ (S : set (A × C)), decidable (S = ∅)]
   [
     inject : BE →                                             -- le model (code, expression) du breakpoint
         (iSTR C₂ A₂ E C bool (has_evaluate.state))  -- semantique du breakpoint
       × (C₂ → bool)                                           -- la fonction d'acceptation induite par la semantic de breakpoint
       × EmptinessChecker (option C × C₂) α 
   ]
- := ReducedMultiverseDebugger C A E R α (FinderFnTemporalState C A E R α inject)
+ := ReducedMultiverseDebugger S C A E R α (FinderFnTemporalState C A E R α inject)
 
 end rmd_state

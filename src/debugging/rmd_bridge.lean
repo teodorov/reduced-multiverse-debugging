@@ -2,7 +2,13 @@ import ..sli.sli ..model_checking.mc_bridge
 
 namespace rmd_bridge
 universe u
-variables (C A E R V α : Type)
+/-!
+  **S** the type of a specification (the model that is interpreted by the STR)
+    - if it is a string, then we have an inject function String → STR C A that will parse the string and instantiate the STR
+    - if it is an program AST, the we have an inject function AST → STR C A that will instantiate the STR with the program AST
+    - more generaly it can be any object type S for which we have an inject function S → STR C A
+-/
+variables (S C A E R V α : Type)
 
 open sli
 open sli.toTR
@@ -28,6 +34,11 @@ structure DebugConfig :=
   (history : set (TraceEntry C A))
   (options : option(DebugAction C A × set C))
 
+/-!
+  **BE** breakpoint expression type, which can be mapped to the semantics and the emptiness checking algorithm needed
+  **Cp** configuration product, a configuration type, which in general is different from C. 
+    In practice it is the tuple (C, C₂), where C₂ is the configuration type needed by the breakpoint semantics
+-/
 def Finder (BE Cp: Type)
   [has_evaluate: Evaluate C A E bool]
   [has_reduce: Reduce Cp R α]
@@ -54,17 +65,22 @@ def rmdActions
     rtb := { x : DebugAction C A | match current with | some te := x = run_to_breakpoint | none := false end }
 	in oa ∪ sa ∪ ja ∪ rtb
 
+def same_configuration [h_C_deq: decidable_eq C]: TraceEntry C A → C → bool
+| (TraceEntry.root  c₁ _  ) c₂ := c₁ = c₂
+| (TraceEntry.child c₁ _ _) c₂ := c₁ = c₂
+
 /-!
   Attention:
-- a l'ordre des configurations dans le contre example
-- est-ce que le contre example contient la configuration a partir de laquele on a lance le run_to_breakpoint 
-  Dans la suite on suppose que contre example renvoye par finder ne contient pas le point de depart
+- to the order of configurations in the counter example (start .. end) vs (end .. start). 
+  Here we suppose **(start .. end)**
+- does the counter exemple contain the start configuration ?
+  The same_configuration check removes the consecutive duplicates
 -/
-def trace2history {C A : Type} : TraceEntry C A → DebugAction C A → list C → set (TraceEntry  C A) → TraceEntry C A × set (TraceEntry  C A)
+def trace2history {C A : Type} [h_C_deq: decidable_eq C] : TraceEntry C A → DebugAction C A → list C → set (TraceEntry  C A) → TraceEntry C A × set (TraceEntry  C A)
 | te da [] history := (te, history)
 | te da (head::tail) history := 
   let
-    te' := (TraceEntry.child head da te),
+    te' := if (same_configuration C A te head) then te else (TraceEntry.child head da te),
     h := history ∪ { te' }
   in 
    trace2history te da tail h
@@ -75,6 +91,7 @@ def te2c {C A : Type} : TraceEntry C A → C
 
 
 def rmdExecute {BE Cp: Type}
+  [h_C_deq: decidable_eq C]
   [has_evaluate: Evaluate C A E bool]
   [has_reduce  : Reduce Cp R α]
   (o : STR C A) 
@@ -102,6 +119,7 @@ def rmdExecute {BE Cp: Type}
 
 
 def ReducedMultiverseDebuggerBridge {BE Cp: Type}
+  [h_C_deq: decidable_eq C]
   [has_evaluate: Evaluate C A E bool]
   [has_reduce  : Reduce Cp R α]
   (o : STR C A) 
@@ -127,13 +145,15 @@ def ReplaceInitial (o : STR C A) (initial : set C) : STR C A :=
 
 
 def ReducedMultiverseDebugger {BE Cp: Type}
+  [h_C_deq: decidable_eq C]
   [has_evaluate: Evaluate C A E bool]
   [has_reduce:   Reduce Cp R α]
   (finder : Finder C A E R α BE Cp)
-  (o : STR C A)
+  (inject: S → STR C A)
+  (specification: S)
   (breakpoint : BE) (reduction : R) 
 : STR (DebugConfig C A) (DebugAction C A) :=
-    ReducedMultiverseDebuggerBridge C A E R α o 
+    ReducedMultiverseDebuggerBridge C A E R α (inject specification)
       finder breakpoint reduction
 
 end rmd_bridge
