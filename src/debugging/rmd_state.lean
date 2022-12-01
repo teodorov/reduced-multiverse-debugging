@@ -18,42 +18,40 @@ open rmd_search
 def FinderBridgeTemporalState {C₂ A₂ BE: Type}
   [has_evaluate: Evaluate C A E bool]
   [h : ∀ (S : set (A × C)), decidable (S = ∅)]
-  [
-    inject : BE →                                             -- le model (code, expression) du breakpoint
-        (iSTR C₂ A₂ E C bool (has_evaluate.state)) -- semantique du breakpoint
-      × (C₂ → bool)                                           -- la fonction d'acceptation induite par la semantic de breakpoint
-  ]
+  (istr: iSTR C₂ A₂ E C bool (has_evaluate.state)) -- semantique du breakpoint
+  (accepting: C₂ → bool)                                           -- la fonction d'acceptation induite par la semantic de breakpoint
   (o : STR C A)       -- underlying STR
   (initial : set C)   -- initial configurations
   (breakpoint : BE)    
   : TR ( option C × C₂) := 
-    let 
-      (istr, accepting) := inject breakpoint 
-    in
-      ModelCheckingStateBridge C C₂ A A₂ E 
-        (ReplaceInitial C A o initial)
-        (λ c, true)
-        istr
-        accepting
+    ModelCheckingStateBridge C C₂ A A₂ E 
+      (ReplaceInitial C A o initial)
+      (λ c, true)
+      istr
+      accepting
 
 def FinderFnTemporalState {C₂ A₂ BE: Type}
-      [has_evaluate: Evaluate C A E bool]
-      [has_reduce:   Reduce (option C×C₂) R α]
-      [h: Π (S : set (A × C)), decidable (S = ∅)]
-      (
-        inject : BE →                                             -- le model (code, expression) du breakpoint
-            (iSTR C₂ A₂ E C bool (has_evaluate.state))           -- semantique du breakpoint
-          × (C₂ → bool)                                           -- la fonction d'acceptation induite par la semantic de breakpoint
-      )
-       : Finder C A E R α BE (option C × C₂)  
-    | o initial breakpoint reduction :=  
-    list.filter_map
-    (λ c: option C × C₂, match c with (c₁, c₂) := c₁ end )
-    (
-        (search_breakpoint (option C × C₂) α 
-          (@FinderBridgeTemporalState C A E C₂ A₂ BE has_evaluate h inject o initial breakpoint) 
-          (Reduce.state reduction))
-    )
+  [has_evaluate: Evaluate C A E bool]
+  [has_reduce:   Reduce (option C×C₂) R α]
+  [h: Π (S : set (A × C)), decidable (S = ∅)]
+  (
+    inject : BE →                                             -- le model (code, expression) du breakpoint
+        (iSTR C₂ A₂ E C bool (has_evaluate.state))           -- semantique du breakpoint
+      × (C₂ → bool)                                           -- la fonction d'acceptation induite par la semantic de breakpoint
+      × EmptinessChecker (option C × C₂) α 
+  )
+    : Finder C A E R α BE (option C × C₂)  
+| o initial breakpoint reduction :=  
+let 
+  (istr, accepting, search_breakpoint) := inject breakpoint 
+in
+  list.filter_map
+  (λ c: option C × C₂, match c with (c₁, c₂) := c₁ end )
+  (
+      (search_breakpoint 
+        (@FinderBridgeTemporalState C A E C₂ A₂ BE has_evaluate h istr accepting o initial breakpoint) 
+        (Reduce.state reduction))
+  )
 
 /-!
   # The top-level semantics of the debugger
@@ -70,6 +68,7 @@ def TopReducedMultiverseDebuggerTemporalState {BE C₂ A₂: Type}
     inject : BE →                                             -- le model (code, expression) du breakpoint
         (iSTR C₂ A₂ E C bool (has_evaluate.state))  -- semantique du breakpoint
       × (C₂ → bool)                                           -- la fonction d'acceptation induite par la semantic de breakpoint
+      × EmptinessChecker (option C × C₂) α 
   )
   (o : STR C A) (breakpoint : BE) (reduction : R) 
 : STR (DebugConfig C A) (DebugAction C A) :=
@@ -84,6 +83,7 @@ def TemporalStateRMD {BE C₂ A₂: Type}
     inject : BE →                                             -- le model (code, expression) du breakpoint
         (iSTR C₂ A₂ E C bool (has_evaluate.state))  -- semantique du breakpoint
       × (C₂ → bool)                                           -- la fonction d'acceptation induite par la semantic de breakpoint
+      × EmptinessChecker (option C × C₂) α 
   ]
  := ReducedMultiverseDebugger C A E R α (FinderFnTemporalState C A E R α inject)
 

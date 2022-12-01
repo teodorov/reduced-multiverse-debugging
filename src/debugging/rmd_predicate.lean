@@ -15,14 +15,13 @@ open rmd_search
   The breakpoint is a simple state **predicate**
 -/ 
 def FinderBridgePredicate
-  [has_evaluate: Evaluate C A E bool]
   (o : STR C A)       -- underlying STR
   (initial : set C)   -- initial configurations
-  (breakpoint : E)    -- the breakpoint
+  (accepting : C → bool)    -- the breakpoint
   : TR C := 
     STR2TR
       (ReplaceInitial C A o initial) 
-      (Evaluate.state A breakpoint)
+      accepting
 
 /-!
   # The finder function of the multiverse debugger
@@ -30,10 +29,17 @@ def FinderBridgePredicate
 def FinderFnPredicate  
       [has_evaluate: Evaluate C A E bool]
       [has_reduce:   Reduce C R α]
+      (
+        inject : E →                                             -- le model (code, expression) du breakpoint
+                    (C → bool)
+                  × EmptinessChecker C α 
+      )
        : Finder C A E R α E C
-    | o initial breakpoint reduction :=  
-      (search_breakpoint C α 
-        (FinderBridgePredicate C A E o initial breakpoint) 
+    | o initial breakpoint reduction := 
+    let (accepting, search_breakpoint) := inject breakpoint
+    in
+      (search_breakpoint
+        (FinderBridgePredicate C A o initial accepting) 
         (Reduce.state reduction))
 
 /-!
@@ -46,16 +52,26 @@ def FinderFnPredicate
 def TopReducedMultiverseDebuggerPredicate
   [has_evaluate: Evaluate C A E bool]
   [has_reduce:   Reduce C R α]
+  (
+    inject : E →                                             -- le model (code, expression) du breakpoint
+              (C → bool)
+              × EmptinessChecker C α 
+  )
   (o : STR C A) (breakpoint : E) (reduction : R) 
 : STR (DebugConfig C A) (DebugAction C A) :=
     ReducedMultiverseDebuggerBridge C A E R α o 
-      (FinderFnPredicate C A E R α) breakpoint reduction
+      (FinderFnPredicate C A E R α inject) breakpoint reduction
 
 
 def PredicateRMD 
   [has_evaluate: Evaluate C A E bool]
   [has_reduce:   Reduce C R α]
- := ReducedMultiverseDebugger C A E R α (FinderFnPredicate C A E R α)
+  (
+    inject : E →                                             -- le model (code, expression) du breakpoint
+              (C → bool)
+              × (EmptinessChecker C α)
+  )
+ := ReducedMultiverseDebugger C A E R α (FinderFnPredicate C A E R α inject)
 
 
 end rmd_predicate
