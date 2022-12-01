@@ -6,9 +6,9 @@ def EmptinessChecker (C α : Type) := TR C → (C → α) → list C
 
 
 -- The counter example should not contain the start state
-def search_breakpoint (C α : Type) (o : TR C) (reducer : C → α)  : list C := 
+-- def search_breakpoint (C α : Type) (o : TR C) (reducer : C → α)  : list C := 
   --under-approximating dfs/bfs here
-  sorry
+  -- sorry
 
 -- def search_breakpoint(o: TR C) (reduce: C → α): list C :=
 --     k = {}

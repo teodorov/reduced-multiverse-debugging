@@ -1,5 +1,4 @@
-
-import ..sli.sli
+import sli.sli
 namespace composition
 universe u
 

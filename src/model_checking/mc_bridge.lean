@@ -1,4 +1,4 @@
-import ..sli.sli ..composition.synchronous
+import sli.sli composition.synchronous
 namespace model_checking
 
 open sli

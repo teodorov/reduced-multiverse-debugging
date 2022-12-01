@@ -1,4 +1,4 @@
-import ..sli.sli ..model_checking.mc_bridge
+import sli.sli model_checking.mc_bridge
 
 namespace rmd_bridge
 universe u
