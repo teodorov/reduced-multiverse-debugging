@@ -75,7 +75,7 @@ def rmdExecute (C A E R α: Type)
     | h::t := { ⟨ h, history ∪ { h } ∪ {x | x ∈ t}, ∅ ⟩ }
     end
 
-def ReducedMultiverseDebuggerAlone (C A E R α : Type)
+def ReducedMultiverseDebuggerBridge (C A E R α : Type)
   [has_evaluate: Evaluate C E bool]
   [has_reduce  : Reduce C R α]
   (o : STR C A) 
@@ -162,4 +162,4 @@ def ReducedMultiverseDebugger (C A E R α : Type)
   [has_reduce:   Reduce C R α]
   (o : STR C A) (breakpoint : E) (reduction : R) 
 : STR (DebugConfig C) (DebugAction C A) :=
-    ReducedMultiverseDebuggerAlone C A E R α o (FinderFn C A E R α) breakpoint reduction
+    ReducedMultiverseDebuggerBridge C A E R α o (FinderFn C A E R α) breakpoint reduction
