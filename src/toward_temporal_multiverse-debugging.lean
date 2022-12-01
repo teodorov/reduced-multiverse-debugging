@@ -1,4 +1,4 @@
-import data.set data.set.finite
+import data.set data.set.finite data.list.basic
 
 universe u
 variables (C A E R V α : Type)
@@ -289,40 +289,44 @@ def FinderBridgePredicate
   # A bridge from the subject semantics with breakpoints to a transition relation
   The breakpoint is a **temporal** state-based 
 -/ 
-class Loader (M S: Type) :=
-  (inject: M → S)
-def FinderBridgeTemporalState {C₁ A₁ E₁ C₂ A₂ E₂: Type}
+
+def FinderBridgeTemporalState {C₁ A₁ E₁ C₂ A₂ BE: Type}
   [has_evaluate: Evaluate C₁ A₁ E₁ bool]
-  [has_loader: Loader E₂ (iSTR C₂ A₂ E₁ C₁ bool (has_evaluate.state))]
   [h : ∀ (S : set (A₁ × C₁)), decidable (S = ∅)]
+  [
+    inject : BE →                                             -- le model (code, expression) du breakpoint
+        (iSTR C₂ A₂ E₁ C₁ bool (has_evaluate.state)) -- semantique du breakpoint
+      × (C₂ → bool)                                           -- la fonction d'acceptation induite par la semantic de breakpoint
+  ]
   (o : STR C₁ A₁)       -- underlying STR
-  (b : iSTR C₂ A₂ E₁ C₁ bool (has_evaluate.state))
-  (accepting₂ : C₂ → bool)
   (initial : set C₁)   -- initial configurations
-  (breakpoint : E₂)    --# TODO: the breakpoint  is not used -- iSTR should be instantiated on the breakpoint
+  (breakpoint : BE)    
   : TR ( option C₁ × C₂) := 
-    ModelCheckingStateBridge C₁ C₂ A₁  A₂ E₁ 
-      (ReplaceInitial C₁ A₁ o initial)
-      (λ c, true)
-      (Loader.inject breakpoint)
-      (accepting₂)
+    let 
+      (istr, accepting) := inject breakpoint 
+    in
+      ModelCheckingStateBridge C₁ C₂ A₁  A₂ E₁ 
+        (ReplaceInitial C₁ A₁ o initial)
+        (λ c, true)
+        istr
+        accepting
 
 /-! 
   # A bridge from the subject semantics with breakpoints to a transition relation
   The breakpoint is a **temporal** step-based 
 -/ 
-def FinderBridgeTemporalStep {C₁ A₁ E₁ C₂ A₂ E₂: Type}
+def FinderBridgeTemporalStep {C₁ A₁ E₁ C₂ A₂ BE: Type}
   [has_evaluate: Evaluate C₁ A₁ E₁ bool]
   [h: ∀ (actions : set (C₁ × MaybeStutter A₁ × C₁)), decidable (actions = ∅)]
   [
-    inject : E₂ →                                             -- le model (code, expression) du breakpoint
+    inject : BE →                                             -- le model (code, expression) du breakpoint
         (iSTR C₂ A₂ E₁ (Step C₁ A₁) bool (has_evaluate.step)) -- semantique du breakpoint
       × (C₂ → bool)                                           -- la fonction d'acceptation induite par la semantic de breakpoint
   ]
 
   (o : STR C₁ A₁)      -- underlying STR
   (initial : set C₁)   -- initial configurations
-  (breakpoint : E₂)    -- le model (code, expression) du breakpoint
+  (breakpoint : BE)    -- le model (code, expression) du breakpoint
   : TR (C₁ × C₂) := 
     let 
       (istr, accepting) := inject breakpoint 
@@ -334,7 +338,7 @@ def FinderBridgeTemporalStep {C₁ A₁ E₁ C₂ A₂ E₂: Type}
       (accepting)
 
 
-def search_breakpoint {C : Type} (α : Type) (o : TR C) (reducer : C → α)  : list C := 
+def search_breakpoint (C : Type) (α : Type) (o : TR C) (reducer : C → α)  : list C := 
   --under-approximating dfs/bfs here
   sorry
 
@@ -378,24 +382,55 @@ def FinderFnPredicate
         (FinderBridgePredicate C A E o initial breakpoint) 
         (Reduce.state reduction))
 
-def FinderFnTemporalState  
-      [has_evaluate: Evaluate C A E bool]
-      [has_reduce:   Reduce C R α]
-       : Finder C A E R α  
-    | o initial breakpoint reduction :=  
-      (search_breakpoint C α 
-        (FinderBridgeTemporalState o initial breakpoint) 
-        (Reduce.state reduction))
+def Finder'' (C₁ C₂ A₁ E BE R α: Type)
+  [has_evaluate: Evaluate C₁ A₁ E bool]
+  [has_reduce:   Reduce (option C₁×C₂) R α]
+:=
+  STR C₁ A₁ → set C₁ → BE → R → list C₁
 
-def FinderFnTemporalStep
-      [has_evaluate: Evaluate C A E bool]
-      [has_reduce:   Reduce C R α]
-      [h: ∀ (actions : set (C × MaybeStutter A × C)), decidable (actions = ∅)]
-       : Finder C A E R α  
+def FinderFnTemporalState {C₁ C₂ A₁ A₂ E BE: Type}
+      [has_evaluate: Evaluate C₁ A₁ E bool]
+      [has_reduce:   Reduce (option C₁×C₂) R α]
+      [h: Π (S : set (A₁ × C₁)), decidable (S = ∅)]
+      [
+        inject : BE →                                             -- le model (code, expression) du breakpoint
+            (iSTR C₂ A₂ E C₁ bool (has_evaluate.state))           -- semantique du breakpoint
+          × (C₂ → bool)                                           -- la fonction d'acceptation induite par la semantic de breakpoint
+      ]
+       : Finder'' C₁ C₂ A₁ E BE R α 
     | o initial breakpoint reduction :=  
-      (search_breakpoint α
-        (FinderBridgeTemporalStep o initial breakpoint) 
+    list.filter_map
+    (λ c: option C₁ × C₂, match c with (c₁, c₂) := c₁ end )
+    (
+        (search_breakpoint (option C₁ × C₂) α 
+          (@FinderBridgeTemporalState C₁ A₁ E C₂ A₂ BE has_evaluate h inject o initial breakpoint) 
+          (Reduce.state reduction))
+    )
+
+def Finder' (C₁ C₂ A₁ E BE R α: Type)
+  [has_evaluate: Evaluate C₁ A₁ E bool]
+  [has_reduce:   Reduce (C₁×C₂) R α]
+:=
+  STR C₁ A₁ → set C₁ → BE → R → list C₁
+
+def FinderFnTemporalStep {C₁ C₂ A₁ A₂ E BE: Type}
+      [has_evaluate: Evaluate C₁ A₁ E bool]
+      [has_reduce:   Reduce (C₁×C₂) R α]
+      [h: ∀ (actions : set (C₁ × MaybeStutter A₁ × C₁)), decidable (actions = ∅)]
+      [
+        inject : BE →                                             -- le model (code, expression) du breakpoint
+            (iSTR C₂ A₂ E (Step C₁ A₁) bool (has_evaluate.step))  -- semantique du breakpoint
+          × (C₂ → bool)                                           -- la fonction d'acceptation induite par la semantic de breakpoint
+      ]
+
+       : Finder' C₁ C₂ A₁ E BE R α 
+    | o initial breakpoint reduction :=  
+      (list.map
+      (λ (c: C₁ × C₂), match c with | (c₁, c₂) := c₁ end) 
+      (search_breakpoint (C₁ × C₂) α
+        (@FinderBridgeTemporalStep C₁ A₁ E C₂ A₂ BE has_evaluate h inject o initial breakpoint) 
         (Reduce.state reduction))
+      )
 
 /-!
   # The top-level semantics of the debugger
@@ -409,4 +444,4 @@ def ReducedMultiverseDebugger
   [has_reduce:   Reduce C R α]
   (o : STR C A) (breakpoint : E) (reduction : R) 
 : STR (DebugConfig₁ C A) (DebugAction C A) :=
-    ReducedMultiverseDebuggerBridge C A E R α o (FinderFn C A E R α) breakpoint reduction
+    ReducedMultiverseDebuggerBridge C A E R α o (FinderFnPredicate C A E R α) breakpoint reduction
