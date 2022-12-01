@@ -16,8 +16,8 @@ open rmd_search
   The breakpoint is a **temporal** step-based 
 -/ 
 def FinderBridgeTemporalStep {C₂ A₂ BE: Type}
+  [∀ actions : set (C × MaybeStutter A × C), decidable (actions = ∅)]
   [has_evaluate: Evaluate C A E bool]
-  [h: ∀ (actions : set (C × MaybeStutter A × C)), decidable (actions = ∅)]
   (istr : iSTR C₂ A₂ E (Step C A) bool (has_evaluate.step))
   (accepting : (C₂ → bool)  )                            
   (o : STR C A)      -- underlying STR
@@ -31,16 +31,16 @@ def FinderBridgeTemporalStep {C₂ A₂ BE: Type}
 
 
 def FinderFnTemporalStep {C₂ A₂ BE: Type}
+  [h: ∀ actions : set (C × MaybeStutter A × C), decidable (actions = ∅)]
   [has_evaluate: Evaluate C A E bool]
   [has_reduce:   Reduce (C×C₂) R α]
-  [h: ∀ (actions : set (C × MaybeStutter A × C)), decidable (actions = ∅)]
   (
     inject : BE →                                             -- le model (code, expression) du breakpoint
         (iSTR C₂ A₂ E (Step C A) bool (has_evaluate.step))  -- semantique du breakpoint
       × (C₂ → bool)                                           -- la fonction d'acceptation induite par la semantic de breakpoint
       × EmptinessChecker (C × C₂) α 
   )
-    : Finder C A E R α BE (C × C₂) 
+    : Finder C A R BE 
 | o initial breakpoint reduction :=  
 let 
   (istr, accepting, search_breakpoint) := inject breakpoint 
@@ -48,7 +48,7 @@ in
   (list.map
     (λ (c: C × C₂), match c with | (c₁, c₂) := c₁ end) 
     (search_breakpoint
-      (@FinderBridgeTemporalStep C A E C₂ A₂ BE has_evaluate h istr accepting o initial) 
+      (@FinderBridgeTemporalStep C A E C₂ A₂ BE h has_evaluate istr accepting o initial) 
       (Reduce.state reduction))
     )
 
@@ -60,10 +60,11 @@ in
   * an abstraction of C
 -/
 def TopReducedMultiverseDebuggerTemporalStep {BE C₂ A₂: Type}
-  [h_C_deq: decidable_eq C]
+  [decidable_eq C]
+  [∀ actions : set (C × MaybeStutter A × C), decidable (actions = ∅)]
   [has_evaluate: Evaluate C A E bool]
   [has_reduce:   Reduce (C × C₂) R α]
-  [h: ∀ (actions : set (C × MaybeStutter A × C)), decidable (actions = ∅)]
+  
   [
     inject : BE →                                             -- le model (code, expression) du breakpoint
         (iSTR C₂ A₂ E (Step C A) bool (has_evaluate.step))  -- semantique du breakpoint
@@ -72,12 +73,12 @@ def TopReducedMultiverseDebuggerTemporalStep {BE C₂ A₂: Type}
   ]
   (o : STR C A) (breakpoint : BE) (reduction : R) 
 : STR (DebugConfig C A) (DebugAction C A) :=
-    ReducedMultiverseDebuggerBridge C A E R α o 
+    ReducedMultiverseDebuggerBridge C A R o 
       (FinderFnTemporalStep C A E R α inject) breakpoint reduction
 
 def TemporalStepRMD {BE C₂ A₂: Type}
-  [h_C_deq: decidable_eq C]
-  [h: ∀ (actions : set (C × MaybeStutter A × C)), decidable (actions = ∅)]
+  [decidable_eq C]
+  [∀ actions : set (C × MaybeStutter A × C), decidable (actions = ∅)]
   [has_evaluate: Evaluate C A E bool]
   [has_reduce:   Reduce (C × C₂) R α]
   [
@@ -86,7 +87,7 @@ def TemporalStepRMD {BE C₂ A₂: Type}
       × (C₂ → bool)                                           -- la fonction d'acceptation induite par la semantic de breakpoint
       × EmptinessChecker (C × C₂) α 
   ]
- := ReducedMultiverseDebugger S C A E R α (FinderFnTemporalStep C A E R α inject)
+ := ReducedMultiverseDebugger S C A R (FinderFnTemporalStep C A E R α inject)
 
 
 end rmd_step

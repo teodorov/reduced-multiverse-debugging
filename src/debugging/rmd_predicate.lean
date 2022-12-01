@@ -27,14 +27,13 @@ def FinderBridgePredicate
   # The finder function of the multiverse debugger
 -/
 def FinderFnPredicate  
-      [has_evaluate: Evaluate C A E bool]
       [has_reduce:   Reduce C R α]
       (
         inject : E →                                             -- le model (code, expression) du breakpoint
                     (C → bool)
                   × EmptinessChecker C α 
       )
-       : Finder C A E R α E C
+       : Finder C A R E
     | o initial breakpoint reduction := 
     let (accepting, search_breakpoint) := inject breakpoint
     in
@@ -50,8 +49,7 @@ def FinderFnPredicate
   * an abstraction of C
 -/
 def TopReducedMultiverseDebuggerPredicate
-  [h_C_deq: decidable_eq C]
-  [has_evaluate: Evaluate C A E bool]
+  [decidable_eq C]
   [has_reduce:   Reduce C R α]
   (
     inject : E →                                             -- le model (code, expression) du breakpoint
@@ -60,20 +58,19 @@ def TopReducedMultiverseDebuggerPredicate
   )
   (o : STR C A) (breakpoint : E) (reduction : R) 
 : STR (DebugConfig C A) (DebugAction C A) :=
-    ReducedMultiverseDebuggerBridge C A E R α o 
+    ReducedMultiverseDebuggerBridge C A R o 
       (FinderFnPredicate C A E R α inject) breakpoint reduction
 
 
 def PredicateRMD
-  [h_C_deq: decidable_eq C]
-  [has_evaluate: Evaluate C A E bool]
+  [decidable_eq C]
   [has_reduce:   Reduce C R α]
   (
     inject : E →                                             -- le model (code, expression) du breakpoint
               (C → bool) 
               × (EmptinessChecker C α)
   )
- := ReducedMultiverseDebugger S C A E R α (FinderFnPredicate C A E R α inject)
+ := ReducedMultiverseDebugger S C A R (FinderFnPredicate C A E R α inject)
 
 
 end rmd_predicate

@@ -1,3 +1,4 @@
+import data.set.basic
 import sli.sli
 namespace composition
 universe u
@@ -11,8 +12,8 @@ open sli
 open sli.MaybeStutter
 def StateSynchronousComposition 
   {C₁ C₂ A₁ A₂ E : Type}
+  [∀ S : set (A₁ × C₁), decidable (S = ∅)]
   [eval : Evaluate C₁ A₁ E bool]
-  [h :  (∀ S : set (A₁ × C₁), decidable (S = ∅))]
   (lhs : STR C₁ A₁)
   (rhs : iSTR C₂ A₂ E C₁ bool eval.state)
  : STR (option C₁ × C₂) (option (MaybeStutter A₁) × A₂) := 
@@ -22,7 +23,7 @@ def StateSynchronousComposition
     | (none, c₂)      := { a | ∀ (t₁ ∈ lhs.initial)
                            (a₂ ∈ rhs.actions c₂ t₁), a = (none, a₂) }
     | (some c₁, c₂)   := let S₁ := { s₁ | ∀ (a₁ ∈ lhs.actions c₁) (t₁ ∈ lhs.execute c₁ a₁), s₁ = (a₁, t₁)}
-                          in if (S₁ ≠ ∅)
+                          in if (S₁ ≠ ∅) 
                             then { a | ∀ (s₁ ∈ S₁), ∀ (a₂ ∈ rhs.actions c₂ (snd s₁)), a = (some (enabled s₁.1), a₂) } 
                             -- add stutter if lhs deadlock
                             else {a | ∀ a₂ ∈ rhs.actions c₂ c₁, a = (some stutter, a₂)}                      
@@ -44,8 +45,8 @@ def StateSynchronousComposition
 
 def StepSynchronousComposition 
   {C₁ C₂ A₁ A₂ E : Type}
+  [∀ actions : set (C₁ × MaybeStutter A₁ × C₁), decidable (actions = ∅)]
   [eval : Evaluate C₁ A₁ E bool]
-  [h :  (∀ actions : set (C₁ × (MaybeStutter A₁) × C₁), decidable (actions = ∅))]
   (lhs : STR C₁ A₁)
   (rhs : iSTR C₂ A₂ E (Step C₁ A₁) bool eval.step)
   : STR (C₁ × C₂) (MaybeStutter A₁ × A₂) := 

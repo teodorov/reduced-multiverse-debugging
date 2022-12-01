@@ -39,9 +39,7 @@ structure DebugConfig :=
   **Cp** configuration product, a configuration type, which in general is different from C. 
     In practice it is the tuple (C, C₂), where C₂ is the configuration type needed by the breakpoint semantics
 -/
-def Finder (BE Cp: Type)
-  [has_evaluate: Evaluate C A E bool]
-  [has_reduce: Reduce Cp R α]
+def Finder (BE: Type)
 :=
   STR C A → set C → BE → R → list C
 
@@ -65,7 +63,7 @@ def rmdActions
     rtb := { x : DebugAction C A | match current with | some te := x = run_to_breakpoint | none := false end }
 	in oa ∪ sa ∪ ja ∪ rtb
 
-def same_configuration [h_C_deq: decidable_eq C]: TraceEntry C A → C → bool
+def same_configuration [decidable_eq C]: TraceEntry C A → C → bool
 | (TraceEntry.root  c₁ _  ) c₂ := c₁ = c₂
 | (TraceEntry.child c₁ _ _) c₂ := c₁ = c₂
 
@@ -76,7 +74,7 @@ def same_configuration [h_C_deq: decidable_eq C]: TraceEntry C A → C → bool
 - does the counter exemple contain the start configuration ?
   The same_configuration check removes the consecutive duplicates
 -/
-def trace2history {C A : Type} [h_C_deq: decidable_eq C] : TraceEntry C A → DebugAction C A → list C → set (TraceEntry  C A) → TraceEntry C A × set (TraceEntry  C A)
+def trace2history {C A : Type} [decidable_eq C] : TraceEntry C A → DebugAction C A → list C → set (TraceEntry  C A) → TraceEntry C A × set (TraceEntry  C A)
 | te da [] history := (te, history)
 | te da (head::tail) history := 
   let
@@ -90,12 +88,10 @@ def te2c {C A : Type} : TraceEntry C A → C
 |  (TraceEntry.child c _ _):= c
 
 
-def rmdExecute {BE Cp: Type}
-  [h_C_deq: decidable_eq C]
-  [has_evaluate: Evaluate C A E bool]
-  [has_reduce  : Reduce Cp R α]
+def rmdExecute {BE: Type}
+  [decidable_eq C]
   (o : STR C A) 
-  (finder : Finder C A E R α BE Cp) (breakpoint : BE) (reduction : R)
+  (finder : Finder C A R BE) (breakpoint : BE) (reduction : R)
   : 
   DebugAction C A → DebugConfig  C A → set (DebugConfig C A)
 | (init) _                                                            :=  ∅ -- cannot get here
@@ -118,19 +114,17 @@ def rmdExecute {BE Cp: Type}
   
 
 
-def ReducedMultiverseDebuggerBridge {BE Cp: Type}
-  [h_C_deq: decidable_eq C]
-  [has_evaluate: Evaluate C A E bool]
-  [has_reduce  : Reduce Cp R α]
+def ReducedMultiverseDebuggerBridge {BE: Type}
+  [decidable_eq C]
   (o : STR C A) 
-  (finder : Finder C A E R α BE Cp) 
+  (finder : Finder C A R BE) 
   (breakpoint : BE) 
   (reduction : R) 
   : STR (DebugConfig C A) (DebugAction C A) :=
 {
   initial :=          rmdInitial C A o,
   actions := λ dc,    rmdActions C A o dc,
-  execute := λ dc da, rmdExecute C A E R α o finder breakpoint reduction da dc
+  execute := λ dc da, rmdExecute C A R o finder breakpoint reduction da dc
 }
 
 /-!
@@ -144,16 +138,14 @@ def ReplaceInitial (o : STR C A) (initial : set C) : STR C A :=
 }
 
 
-def ReducedMultiverseDebugger {BE Cp: Type}
-  [h_C_deq: decidable_eq C]
-  [has_evaluate: Evaluate C A E bool]
-  [has_reduce:   Reduce Cp R α]
-  (finder : Finder C A E R α BE Cp)
+def ReducedMultiverseDebugger {BE: Type}
+  [decidable_eq C]
+  (finder : Finder C A R BE)
   (inject: S → STR C A)
   (specification: S)
   (breakpoint : BE) (reduction : R) 
 : STR (DebugConfig C A) (DebugAction C A) :=
-    ReducedMultiverseDebuggerBridge C A E R α (inject specification)
+    ReducedMultiverseDebuggerBridge C A R (inject specification)
       finder breakpoint reduction
 
 end rmd_bridge

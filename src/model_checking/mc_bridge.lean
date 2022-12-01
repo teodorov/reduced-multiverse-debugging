@@ -7,8 +7,8 @@ open composition
 
 def ModelCheckingStateBridge
   (C₁ C₂ A₁ A₂ E : Type)
+  [∀ S : set (A₁ × C₁), decidable (S = ∅)]
   [eval : Evaluate C₁ A₁ E bool]
-  [h :  (∀ S : set (A₁ × C₁), decidable (S = ∅))]
   (lhs : STR C₁ A₁)
   (accepting₁ : C₁ → bool)
   (rhs : iSTR C₂ A₂ E C₁ bool eval.state)
@@ -23,8 +23,8 @@ def ModelCheckingStateBridge
 
 def ModelCheckingStepBridge
   (C₁ C₂ A₁ A₂ E : Type)
+  [∀ actions : set (C₁ × MaybeStutter A₁ × C₁), decidable (actions = ∅)]
   [eval : Evaluate C₁ A₁ E bool]
-  [h :  (∀ actions : set (C₁ × (MaybeStutter A₁) × C₁), decidable (actions = ∅))]
   (lhs : STR C₁ A₁)
   (accepting₁ : C₁ → bool)
   (rhs : iSTR C₂ A₂ E (Step C₁ A₁) bool eval.step)
