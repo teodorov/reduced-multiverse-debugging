@@ -95,8 +95,8 @@ def rmdExecute {BE: Type}
   : 
   DebugAction C A → DebugConfig  C A → set (DebugConfig C A)
 | (init) _                                                            :=  ∅ -- cannot get here
-| (step a)            ⟨ (some (TraceEntry.root c da)), history, _ ⟩   := { ⟨ (TraceEntry.root c da), history, some (step a, o.execute c a) ⟩ }
-| (step a)            ⟨ (some (TraceEntry.child c da p)), history, _⟩ := { ⟨ (TraceEntry.child c da p), history, some (step a, o.execute c a) ⟩ }
+| (step a)            ⟨ (some (TraceEntry.root c da)), history, _ ⟩   := { ⟨ (TraceEntry.root c da), history, some (step a, o.execute a c) ⟩ }
+| (step a)            ⟨ (some (TraceEntry.child c da p)), history, _⟩ := { ⟨ (TraceEntry.child c da p), history, some (step a, o.execute a c) ⟩ }
 | (step a)            ⟨ _, _, _ ⟩                                     := ∅ -- cannot get here due to debugActions which produce steps only of current=some c
 | (select c)          ⟨ none, history, some (da, _)⟩                  := (let te := (TraceEntry.root c (@select C A c)) in  { ⟨ te , { te } ∪ history, none ⟩ })
 | (select c)          ⟨ some te, history, some(da, _)⟩                := (let te₁ := (TraceEntry.child c (@select C A c) te) in  { ⟨ te₁, { te₁ } ∪ history, none ⟩ })
@@ -124,7 +124,7 @@ def ReducedMultiverseDebuggerBridge {BE: Type}
 {
   initial :=          rmdInitial C A o,
   actions := λ dc,    rmdActions C A o dc,
-  execute := λ dc da, rmdExecute C A R o finder breakpoint reduction da dc
+  execute := λ da dc, rmdExecute C A R o finder breakpoint reduction da dc
 }
 
 /-!
@@ -137,13 +137,13 @@ def ReplaceInitial (o : STR C A) (initial : set C) : STR C A :=
   execute := o.execute,
 }
 
-
 def ReducedMultiverseDebugger {BE: Type}
   [decidable_eq C]
   (finder : Finder C A R BE)
   (inject: S → STR C A)
   (specification: S)
-  (breakpoint : BE) (reduction : R) 
+  (breakpoint : BE) 
+  (reduction : R) 
 : STR (DebugConfig C A) (DebugAction C A) :=
     ReducedMultiverseDebuggerBridge C A R (inject specification)
       finder breakpoint reduction

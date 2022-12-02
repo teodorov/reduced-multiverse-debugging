@@ -16,17 +16,17 @@ variables (C A E R V α : Type)
 -/
 structure STR :=
   (initial: set C)
-  (actions: C → set A)
-  (execute: C → A → set C)
+  (actions:     C → set A)
+  (execute: A → C → set C)
 
 structure iSTR (C A E I V: Type) (eval : E → I → V) :=
-  (initial: set C)
-  (actions: C → I → set A)
-  (execute: C → I → A → set C)
+  (initial:             set C)
+  (actions:     I → C → set A)
+  (execute: A → I → C → set C)
 
-inductive MaybeStutter (α : Type u)
+inductive MaybeStutter (A : Type)
 | stutter : MaybeStutter
-| enabled (val : α) : MaybeStutter
+| enabled (val : A) : MaybeStutter
 open MaybeStutter
 def Step (C A : Type) := (C × MaybeStutter A × C)
 
@@ -54,7 +54,7 @@ def STR2TR
 : TR C  := 
 { 
     initial := { c | c ∈ str.initial },
-    next := λ c, { t | ∀ a ∈ (str.actions c), t ∈ str.execute c a },
+    next := λ c, { t | ∀ a ∈ (str.actions c), t ∈ str.execute a c },
     accepting := accepting
 }
 
