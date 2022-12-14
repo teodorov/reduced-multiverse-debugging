@@ -57,7 +57,7 @@ def rmdActions
 (o : STR C A) : DebugConfig C A → set (DebugAction C A) 
 | ⟨ current, history, options ⟩ :=
   let
-    oa := { x : DebugAction C A | ∀ c, (ote2c current) = some c → ∀ a ∈ (o.actions c), x = step a }, 
+    oa := { x : DebugAction C A | ∀ c, (options = none) → (ote2c current) = some c → ∀ a ∈ (o.actions c), x = step a }, 
     sa := { x : DebugAction C A | match options with | some (_, configs) := ∀ c ∈ configs, x = select c | none := false end },
     ja := { x : DebugAction C A | ∀ te ∈ history,                               x = jump te    },
     rtb := { x : DebugAction C A | match current with | some te := x = run_to_breakpoint | none := false end }
@@ -81,7 +81,7 @@ def trace2history {C A : Type} [decidable_eq C] : TraceEntry C A → DebugAction
     te' := if (same_configuration C A te head) then te else (TraceEntry.child head da te),
     h := history ∪ { te' }
   in 
-   trace2history te da tail h
+   trace2history te' da tail h
 
 def te2c {C A : Type} : TraceEntry C A → C
 |  (TraceEntry.root c _) :=  c
@@ -98,8 +98,8 @@ def rmdExecute {BE: Type}
 | (step a)            ⟨ (some (TraceEntry.root c da)), history, _ ⟩   := { ⟨ (TraceEntry.root c da), history, some (step a, o.execute a c) ⟩ }
 | (step a)            ⟨ (some (TraceEntry.child c da p)), history, _⟩ := { ⟨ (TraceEntry.child c da p), history, some (step a, o.execute a c) ⟩ }
 | (step a)            ⟨ _, _, _ ⟩                                     := ∅ -- cannot get here due to debugActions which produce steps only of current=some c
-| (select c)          ⟨ none, history, some (da, _)⟩                  := (let te := (TraceEntry.root c (@select C A c)) in  { ⟨ te , { te } ∪ history, none ⟩ })
-| (select c)          ⟨ some te, history, some(da, _)⟩                := (let te₁ := (TraceEntry.child c (@select C A c) te) in  { ⟨ te₁, { te₁ } ∪ history, none ⟩ })
+| (select c)          ⟨ none, history, some (da, _)⟩                  := (let te := (TraceEntry.root c da) in  { ⟨ te , { te } ∪ history, none ⟩ })
+| (select c)          ⟨ some te, history, some(da, _)⟩                := (let te₁ := (TraceEntry.child c da te) in  { ⟨ te₁, { te₁ } ∪ history, none ⟩ })
 | (select c)          ⟨ _, _, _ ⟩                                     := ∅ --cannot get here
 | (jump te)           ⟨ _, history, _⟩                                := { ⟨ some te, history, none ⟩ }
 | (run_to_breakpoint) ⟨ some te, history, opts ⟩                      := 
@@ -108,7 +108,7 @@ def rmdExecute {BE: Type}
                                                                             patch := trace2history te run_to_breakpoint trace ∅ 
                                                                           in 
                                                                             match patch with 
-                                                                            | (te, ch) := { ⟨ some te, history ∪ ch, opts ⟩ } 
+                                                                            | (te, ch) := { ⟨ some te, history ∪ ch, none ⟩ } 
                                                                             end
 | (run_to_breakpoint) ⟨ _, _, _ ⟩                                     := ∅ --cannot get here
   
