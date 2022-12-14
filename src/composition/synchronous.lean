@@ -11,11 +11,11 @@ open prod
 open sli
 open sli.MaybeStutter
 def StateSynchronousComposition 
-  {C₁ C₂ A₁ A₂ E : Type}
+  {C₁ C₂ A₁ A₂ E𝕔 E𝕤 : Type}
   [∀ S : set (A₁ × C₁), decidable (S = ∅)]
-  [eval : Evaluate C₁ A₁ E bool]
+  [eval : Evaluate C₁ A₁ bool E𝕔 E𝕤 ]
   (lhs : STR C₁ A₁)
-  (rhs : iSTR C₂ A₂ E C₁ bool eval.state)
+  (rhs : iSTR C₂ A₂ E𝕔 C₁ bool eval.configuration)
  : STR (option C₁ × C₂) (option (MaybeStutter A₁) × A₂) := 
  {
    initial := {c | ∀ (c₂ ∈ rhs.initial), c = (none, c₂)},
@@ -43,11 +43,11 @@ def StateSynchronousComposition
  }
 
 def StepSynchronousComposition 
-  {C₁ C₂ A₁ A₂ E : Type}
+  {C₁ C₂ A₁ A₂ E𝕔 E𝕤 : Type}
   [∀ actions : set (C₁ × MaybeStutter A₁ × C₁), decidable (actions = ∅)]
-  [eval : Evaluate C₁ A₁ E bool]
+  [eval : Evaluate C₁ A₁ bool E𝕔 E𝕤]
   (lhs : STR C₁ A₁)
-  (rhs : iSTR C₂ A₂ E (Step C₁ A₁) bool eval.step)
+  (rhs : iSTR C₂ A₂ E𝕤 (Step C₁ A₁) bool eval.step)
   : STR (C₁ × C₂) (MaybeStutter A₁ × A₂) := 
   { 
     initial := { c | ∀ (c₁ ∈ lhs.initial) (c₂ ∈ rhs.initial), c = (c₁, c₂) },

@@ -30,9 +30,13 @@ inductive MaybeStutter (A : Type)
 open MaybeStutter
 def Step (C A : Type) := (C × MaybeStutter A × C)
 
-class Evaluate :=
-  (state : E → C → V)
-  (step : E → (C × MaybeStutter A × C) → V)
+class Evaluate (E𝕔 E𝕤 : Type) :=
+  (configuration : E𝕔 → C → V)
+  (step : E𝕤 → (C × MaybeStutter A × C) → V)
+
+-- get the step evaluation function from a configuration evaluation function
+def evaluateStepFromState (E𝕔) (evaluateState : E𝕔 → C → V) : E𝕔 → (C × MaybeStutter A × C) → V 
+| e (s, _, _) := evaluateState e s
 
 class Reduce :=
   (state : R → C → α)
