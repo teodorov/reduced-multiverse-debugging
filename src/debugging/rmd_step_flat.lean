@@ -35,7 +35,7 @@ in
   (list.map
     (λ (c: C × C₂), match c with | (c₁, c₂) := c₁ end) 
     (search_breakpoint
-      (@STR2TR (C×C₂) (MaybeStutter A×A₂)
+      (STR2TR
         (StepSynchronousComposition (ReplaceInitial C A o initial) (istr)) 
         (λ c, accepting c.2))
       (Reduce.state reduction))
