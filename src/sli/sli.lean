@@ -35,8 +35,8 @@ class Evaluate (E𝕔 E𝕤 : Type) :=
   (step : E𝕤 → (C × MaybeStutter A × C) → V)
 
 -- get the step evaluation function from a configuration evaluation function
-def evaluateStepFromState (E𝕔) (evaluateState : E𝕔 → C → V) : E𝕔 → (C × MaybeStutter A × C) → V 
-| e (s, _, _) := evaluateState e s
+def evaluateStepFromConfiguration (E𝕔) (evaluateConfiguration : E𝕔 → C → V) : E𝕔 → (C × MaybeStutter A × C) → V 
+| e (s, _, _) := evaluateConfiguration e s
 
 class Reduce :=
   (state : R → C → α)
