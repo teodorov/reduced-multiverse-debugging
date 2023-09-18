@@ -7,6 +7,7 @@ universe u
   - **A** action
   - **E** diagnosis expression
   - **R** reduction expression
+  - **V** value type
   - **α** the target type of the reduction
 -/
 variables (C A E R V α : Type)
@@ -19,6 +20,9 @@ structure STR :=
   (actions:     C → set A)
   (execute: A → C → set C)
 
+/-!
+- **I** input type
+-/
 structure iSTR (C A E I V: Type) (eval : E → I → V) :=
   (initial:             set C)
   (actions:     I → C → set A)
@@ -30,6 +34,8 @@ inductive MaybeStutter (A : Type)
 open MaybeStutter
 def Step (C A : Type) := (C × MaybeStutter A × C)
 
+-- **E𝕔** --> expression on configuration
+-- **E𝕤** --> expression on step
 class Evaluate (E𝕔 E𝕤 : Type) :=
   (configuration : E𝕔 → C → V)
   (step : E𝕤 → (C × MaybeStutter A × C) → V)
