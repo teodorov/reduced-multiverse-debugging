@@ -1,6 +1,6 @@
 # Temporal Multiverse Debugging
 
-This repository contains the lean3 formalization of **Temporal Multiverse Debugging** (TMD) a new debugging architecture, which threats the breakpoints as a language component[[1]](#2).
+This repository contains the lean3 formalization of **Temporal Multiverse Debugging** (TMD) a new debugging architecture, which threats the breakpoints as a language component[[2]](#2).
 
 This formalization also integrates the *user-defined reductions* proposed in [[1]](#1).
 
