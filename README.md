@@ -1,6 +1,6 @@
 # Temporal Multiverse Debugging
 
-This repository contains the lean3 formalization of **Temporal Multiverse Debugging** (TMD) a new debugging architecture, which threats the breakpoints as a language component.
+This repository contains the lean3 formalization of **Temporal Multiverse Debugging** (TMD) a new debugging architecture, which threats the breakpoints as a language component[[1]](#2).
 
 This formalization also integrates the *user-defined reductions* proposed in [[1]](#1).
 
@@ -22,5 +22,8 @@ The repository is organized as follows:
 ## References
 
 <a id="1">[1]</a>
-Practical multiverse debugging through user-defined reductions. Pasquier, Matthias,  Teodorov, Ciprian, Jouault, Frédéric, Brun, Matthias, Roux, Luka Le, and Lagadec, Loïc
+Practical multiverse debugging through user-defined reductions. Matthias Pasquier, Ciprian Teodorov, Frédéric Jouault, Matthias Brun, Luka Le Roux, and Loïc Lagadec.
 *In MODELS ’22: ACM/IEEE 25th International Conference on Model Driven Engineering Languages and Systems*, Montreal, Canada, Oct 2022
+
+<a id="2">[2]</a>
+Temporal Breakpoints for Multiverse Debugging. Matthias Pasquier, Ciprian Teodorov, Frédéric Jouault, Matthias Brun, Luka Le Roux, and Loïc Lagadec. *SLE 2023: Proceedings of the 16th ACM SIGPLAN International Conference on Software Language Engineering*, Cascais, Portugal, Oct 2023.
